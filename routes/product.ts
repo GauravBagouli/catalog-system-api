@@ -9,5 +9,3 @@ router.post('/type/create',             addProductType);
 router.get('/list',                     getProductList);
 
 export default router;
-
-

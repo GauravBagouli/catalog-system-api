@@ -12,7 +12,10 @@ import fs from 'fs';
 dotenv.config();
 import "./data/connection/connection";
 import "./data/loadModels";
+
 import productRoutes from './routes/product';
+import variantRoutes from './routes/variant';
+import addonRoutes from './routes/addon';
 
 
 const app = express();
@@ -52,6 +55,8 @@ app.get('/server/health', (req: Request, res: Response) => {
 
 // Routes
 app.use('/api/product',    productRoutes);
+app.use('/api/variant',    variantRoutes);
+app.use('/api/addon',      addonRoutes);
 
 // Server start
 app.listen(PORT, () => {

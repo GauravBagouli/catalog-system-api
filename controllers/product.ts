@@ -1,10 +1,10 @@
-import { decryptData } from "../services/authService";
+import { decryptData, getStringFromQuery } from "../services/authService";
 import { Request, Response } from "express";
+import { OrderItem } from "sequelize";
 import { createProduct, getProduct, getProducts } from '../data/managers/product';
 import { createProductType, getProductType } from "../data/managers/productType";
 import { ProductAttributes } from "../data/models/product";
 import { ProductTypeAttributes } from "../data/models/productType";
-import { OrderItem } from "sequelize";
 
 
 //This controller is used to add product
@@ -48,9 +48,9 @@ export const addProduct = async (req: Request, res: Response) => {
       attributes: ['id']
     };
 
-    let product = await getProduct(productQuery);
+    let duplicateProduct = await getProduct(productQuery);
 
-    if (product !== null) {
+    if (duplicateProduct !== null) {
       return res.status(409).json({ success: false, message: 'Product already exists' });
     }
 
@@ -137,6 +137,44 @@ export const getProductList = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, data: products });
   } catch (error) {
     console.log("================ Error while getting product list ================", error);
+    if (error instanceof Error) {
+      res.status(409).json({ success: false, message: error.message });
+    } else {
+      res.status(409).json({ success: false, message: 'Something went wrong' });
+    }
+  }
+};
+
+
+// This function is used to get Products by Type
+export const getProductsByType = async (req: Request, res: Response) => {
+  try {
+    if(!req.query.payload) {
+      return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
+    }
+
+    const payloadStr = getStringFromQuery(req.query.payload, 'payload');
+
+    const params = decryptData<ProductAttributes>(payloadStr);
+
+    if (!params || !params.product_type_id) {
+      return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
+    }
+
+    const searchQuery: {
+      where: { product_type_id: number };
+      order: OrderItem[];
+    } = {
+      where: { 
+        product_type_id: params.product_type_id
+      },
+      order: [['created_at', 'DESC']],
+    };
+
+    const products = await getProducts(searchQuery);
+    res.status(200).json({ success: true, data: products });
+  } catch (error) {
+    console.log("================ Error while getting product list by type ================", error);
     if (error instanceof Error) {
       res.status(409).json({ success: false, message: error.message });
     } else {

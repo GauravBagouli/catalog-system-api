@@ -37,7 +37,7 @@ export const getProducts = async (
 
 
 /**
- * Get all products with optional filters
+ * Get one product with optional filters
  * @param options - Sequelize find options (e.g., where, limit, order)
  * @returns One product as plain JSON
  */

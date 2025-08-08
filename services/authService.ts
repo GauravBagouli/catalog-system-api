@@ -18,3 +18,10 @@ export const decryptData = <T = unknown>(data: string): T => {
     throw new Error('Data decryption failed');
   }
 };
+
+export function getStringFromQuery(queryParam: unknown, paramName: string): string {
+  if (typeof queryParam !== 'string') {
+    throw new Error(`Query param '${paramName}' is not a string`);
+  }
+  return queryParam;
+}
