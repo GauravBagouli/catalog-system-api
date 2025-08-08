@@ -2,7 +2,7 @@ import { decryptData, getStringFromQuery } from "../services/authService";
 import { Request, Response } from "express";
 import { OrderItem } from "sequelize";
 import { createProduct, getProduct, getProducts } from '../data/managers/product';
-import { createProductType, getProductType } from "../data/managers/productType";
+import { createProductType, getProductType, getProductTypes } from "../data/managers/productType";
 import { ProductAttributes } from "../data/models/product";
 import { ProductTypeAttributes } from "../data/models/productType";
 
@@ -124,8 +124,8 @@ export const addProductType = async (req: Request, res: Response) => {
 // This function is used to get product list
 export const getProductList = async (req: Request, res: Response) => {
   try {
-    const searchQuery: {
-      where: { status: string };
+    let searchQuery: {
+      where: { status: string, product_type_id?: number };
       order: OrderItem[];
     } = {
       where: { 
@@ -133,6 +133,13 @@ export const getProductList = async (req: Request, res: Response) => {
       },
       order: [['created_at', 'DESC']],
     };
+    if(req.query.payload) {
+      const payloadStr = getStringFromQuery(req.query.payload, 'payload');
+      const params = decryptData<ProductAttributes>(payloadStr);
+      if (params && params.product_type_id) {
+        searchQuery.where.product_type_id = params.product_type_id;
+      }
+    }
     const products = await getProducts(searchQuery);
     res.status(200).json({ success: true, data: products });
   } catch (error) {
@@ -175,6 +182,22 @@ export const getProductsByType = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, data: products });
   } catch (error) {
     console.log("================ Error while getting product list by type ================", error);
+    if (error instanceof Error) {
+      res.status(409).json({ success: false, message: error.message });
+    } else {
+      res.status(409).json({ success: false, message: 'Something went wrong' });
+    }
+  }
+};
+
+
+// This function is used to get product type list
+export const getProductTypeList = async (req: Request, res: Response) => {
+  try {
+    const productTypes = await getProductTypes();
+    res.status(200).json({ success: true, data: productTypes });
+  } catch (error) {
+    console.log("================ Error while getting product type list ================", error);
     if (error instanceof Error) {
       res.status(409).json({ success: false, message: error.message });
     } else {

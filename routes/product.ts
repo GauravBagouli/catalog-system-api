@@ -1,5 +1,5 @@
 import express from 'express';
-import { addProduct, addProductType, getProductList } from '../controllers/product';
+import { addProduct, addProductType, getProductList, getProductsByType, getProductTypeList } from '../controllers/product';
 
 const router = express.Router();
 
@@ -7,5 +7,7 @@ const router = express.Router();
 router.post('/create',                  addProduct);
 router.post('/type/create',             addProductType);
 router.get('/list',                     getProductList);
+router.get('/type/list',                getProductTypeList);
+router.get('list/:type',                getProductsByType);
 
 export default router;
