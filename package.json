@@ -6,7 +6,6 @@
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc",
-    "prestart": "npm run build",
     "start": "node dist/server.js"
   },
   "dependencies": {
