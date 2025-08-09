@@ -21,6 +21,23 @@ export const createVariant = async (
 
 
 /**
+ * Creates multiple variants in bulk
+ * @param payload - Array of variant data for creation
+ * @returns Array of created variants as plain JSON
+ */
+export const bulkCreateVariants = async (
+  payload: VariantCreationAttributes[]
+): Promise<VariantAttributes[]> => {
+  try {
+    const results = await Variant.bulkCreate(payload);
+    return results.map(r => r.get({ plain: true })) as VariantAttributes[];
+  } catch (err: any) {
+    throw generateErrorMsg('VariantManager.bulkCreateVariants', err);
+  }
+};
+
+
+/**
  * Get all varient with optional filters
  * @param options - Sequelize find options (e.g., where, limit, order)
  * @returns Array of products as plain JSON

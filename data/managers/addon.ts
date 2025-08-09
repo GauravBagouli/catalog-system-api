@@ -54,3 +54,20 @@ export const getOneAddon = async (
     throw generateErrorMsg('AddonManager.getOneAddon', err);
   }
 };
+
+
+/**
+ * Creates multiple addons in bulk
+ * @param payload - Array of addon data for creation
+ * @returns Array of created addons as plain JSON
+ */
+export const bulkCreateAddons = async (
+  payload: AddonCreationAttributes[]
+): Promise<AddonAttributes[]> => {
+  try {
+    const results = await Addon.bulkCreate(payload);
+    return results.map(r => r.get({ plain: true })) as AddonAttributes[];
+  } catch (err: any) {
+    throw generateErrorMsg('AddonManager.bulkCreateAddons', err);
+  }
+};

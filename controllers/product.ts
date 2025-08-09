@@ -4,7 +4,12 @@ import { OrderItem } from "sequelize";
 import { createProduct, getProduct, getProducts } from '../data/managers/product';
 import { createProductType, getProductType, getProductTypes } from "../data/managers/productType";
 import { ProductAttributes } from "../data/models/product";
-import { ProductTypeAttributes } from "../data/models/productType";
+import { ProductType, ProductTypeAttributes } from "../data/models/productType";
+import { Variant } from "../data/models/variant";
+import { Addon } from "../data/models/addon";
+import { AddProductParams } from "../lib/params";
+import { bulkCreateAddons } from "../data/managers/addon";
+import { bulkCreateVariants } from "../data/managers/variant";
 
 
 //This controller is used to add product
@@ -14,7 +19,7 @@ export const addProduct = async (req: Request, res: Response) => {
       return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
     }
 
-    const params = decryptData<ProductAttributes>(req.body.payload);
+    const params = decryptData<AddProductParams>(req.body.payload);
 
     if (!params || !params.product_type_id || !params.name) {
       return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
@@ -61,7 +66,33 @@ export const addProduct = async (req: Request, res: Response) => {
       product_images: params.product_images || []
     };
 
-    await createProduct(payload);
+    let product = await createProduct(payload);
+
+    if(params?.addons && params?.addons?.length > 0) {
+      const addonPayload = params.addons.map((addon) => {
+        return {
+          product_id: product.id,
+          name: addon.name,
+          price: addon.price
+        }
+      })
+      await bulkCreateAddons(addonPayload);
+    }
+
+    if(params?.variants && params?.variants?.length > 0) {
+      const variantPayload = params.variants.map((variant) => {
+        return {
+          product_id: product.id,
+          size: variant.size,
+          color: variant.color,
+          price: variant.price,
+          stock: variant.stock,
+          sku: variant.sku
+        }
+      })
+      await bulkCreateVariants(variantPayload);
+    }
+
     res.status(200).json({ success: true, message: 'Product added successfully' });
   } catch (error) {
     console.log("================ Error while adding product ================", error);
@@ -205,3 +236,42 @@ export const getProductTypeList = async (req: Request, res: Response) => {
     }
   }
 };
+
+
+// 
+export const getProductDetails = async (req: Request, res: Response) => {
+  try {
+    if(!req.query.payload) {
+      return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
+    }
+
+    const payloadStr = getStringFromQuery(req.query.payload, 'payload');
+
+    const params = decryptData<ProductAttributes>(payloadStr);
+
+    if (!params || !params.id) {
+      return res.status(406).json({ success: false, message: 'Request data missing or invalid' });
+    }
+
+    const searchQuery = {
+      where: {
+        id: params.id
+      },
+      include: [
+        { model: ProductType, attributes: ['id', 'name'] },
+        { model: Variant, attributes: ['id', 'size', 'color', 'price', 'stock', 'sku'] },
+        { model: Addon, attributes: ['id', 'name', 'price'] }
+      ]
+    }
+
+    const product = await getProduct(searchQuery);
+    res.status(200).json({ success: true, data: product });
+  } catch (error) {
+    console.log("================ Error while getting product details ================", error);
+    if (error instanceof Error) {
+      res.status(409).json({ success: false, message: error.message });
+    } else {
+      res.status(409).json({ success: false, message: 'Something went wrong' });
+    }
+  }
+}
