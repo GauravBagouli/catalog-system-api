@@ -60,5 +60,5 @@ app.use('/api/addon',      addonRoutes);
 
 // Server start
 app.listen(PORT, () => {
-  console.log(`🚀 Server is live at http://localhost:${PORT}`);
+  console.log(`🚀 Server is live at port:${PORT}`);
 });
